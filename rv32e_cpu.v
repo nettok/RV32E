@@ -1,18 +1,6 @@
 `timescale 1ns / 1ps
 
-// // Opcodes
-// `define ADD_REG  6'b000000
-// `define MUL      6'b000010
-// `define MOV      6'b000100
-// `define NOP      6'b000111
-// `define LD_IMM   6'b100000
-// `define CMP_IMM  6'b100011
-// `define DEC      6'b100101
-// `define INPUT    6'b100110
-// `define OUTPUT   6'b100111
-// `define BRA      6'b101010
-// `define BHI      6'b101100
-// `define BEQ      6'b101101
+`include "instructions.v"
 
 // States
 `define ST_FETCH        4'b0001
@@ -32,11 +20,45 @@ module rv32e_cpu(
     // output [31:0] mem_write_data_bus,
     // output [31:0] mem_addr_bus
 );
-    // registers
-    reg [31:0] x [15:0];    // RV32E has 16 registers (x0-x15)
-    reg [31:0] pc;
+    // registers (RV32E has 16 registers (x0-x15))
+    reg  [31:0] x [15:1];   // x1-x15 are general purpose  (x0 is defined below as it is hardwired to 0)
+    reg  [31:0] pc;
 
     // wiring
+    wire [31:0] x0;         // x0 is hardwired to 0
+    assign x0 = 0;
+
+    wire [31:0] x1;         // x1-x15 have wires for simulation visualization only
+    wire [31:0] x2;
+    wire [31:0] x3;
+    wire [31:0] x4;
+    wire [31:0] x5;
+    wire [31:0] x6;
+    wire [31:0] x7;
+    wire [31:0] x8;
+    wire [31:0] x9;
+    wire [31:0] x10;
+    wire [31:0] x11;
+    wire [31:0] x12;
+    wire [31:0] x13;
+    wire [31:0] x14;
+    wire [31:0] x15;
+
+    assign x1 = x[1];
+    assign x2 = x[2];
+    assign x3 = x[3];
+    assign x4 = x[4];
+    assign x5 = x[5];
+    assign x6 = x[6];
+    assign x7 = x[7];
+    assign x8 = x[8];
+    assign x9 = x[9];
+    assign x10 = x[10];
+    assign x11 = x[11];
+    assign x12 = x[12];
+    assign x13 = x[13];
+    assign x14 = x[14];
+    assign x15 = x[15];
     assign mem_program_addr_bus = pc;
 
     // state machine

@@ -32,7 +32,7 @@ module testbench;
 
         #50 reset <= 0; #50 reset <= 1;
 
-        #500
+        #830
         $finish;
     end
 
