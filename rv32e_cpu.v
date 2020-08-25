@@ -24,47 +24,51 @@ module rv32e_cpu(
     reg  [31:0] x [15:1];   // x1-x15 are general purpose  (x0 is defined below as it is hardwired to 0)
     reg  [31:0] pc;
 
-    // wiring
-    wire [31:0] x0;         // x0 is hardwired to 0
-    assign x0 = 0;
+    // registers wiring
+    wire [31:0] x0 = 0;         // x0 is hardwired to 0
 
-    wire [31:0] x1;         // x1-x15 have wires for simulation visualization only
-    wire [31:0] x2;
-    wire [31:0] x3;
-    wire [31:0] x4;
-    wire [31:0] x5;
-    wire [31:0] x6;
-    wire [31:0] x7;
-    wire [31:0] x8;
-    wire [31:0] x9;
-    wire [31:0] x10;
-    wire [31:0] x11;
-    wire [31:0] x12;
-    wire [31:0] x13;
-    wire [31:0] x14;
-    wire [31:0] x15;
+    wire [31:0] x1 = x[1];      // x1-x15 have wires for simulation visualization only
+    wire [31:0] x2 = x[2];
+    wire [31:0] x3 = x[3];
+    wire [31:0] x4 = x[4];
+    wire [31:0] x5 = x[5];
+    wire [31:0] x6 = x[6];
+    wire [31:0] x7 = x[7];
+    wire [31:0] x8 = x[8];
+    wire [31:0] x9 = x[9];
+    wire [31:0] x10 = x[10];
+    wire [31:0] x11 = x[11];
+    wire [31:0] x12 = x[12];
+    wire [31:0] x13 = x[13];
+    wire [31:0] x14 = x[14];
+    wire [31:0] x15 = x[15];
 
-    assign x1 = x[1];
-    assign x2 = x[2];
-    assign x3 = x[3];
-    assign x4 = x[4];
-    assign x5 = x[5];
-    assign x6 = x[6];
-    assign x7 = x[7];
-    assign x8 = x[8];
-    assign x9 = x[9];
-    assign x10 = x[10];
-    assign x11 = x[11];
-    assign x12 = x[12];
-    assign x13 = x[13];
-    assign x14 = x[14];
-    assign x15 = x[15];
     assign mem_program_addr_bus = pc;
 
     // state machine
     reg [3:0]  state;
     reg [31:0] inst;
 
+    /* instruction decoding wiring
+     *
+     * Some ranges are overlapped given that different instruction types use different instruction formats.
+     */
+    wire [6:0]  opcode  = inst[6:0];
+    wire [4:0]  rd      = inst[11:7];   // destination register
+    wire [2:0]  funct3  = inst[14:12];
+    wire [4:0]  rs1     = inst[19:15];  // source register 1
+    wire [4:0]  rs2     = inst[24:20];  // source register 2
+    wire [11:0] imm11_0 = inst[31:20];
+
+    /* internal memory
+     *
+     * Execution is simplified by decoding all instruction operand types
+     */
+    reg [31:0] operand1;
+    reg [31:0] operand2;
+    reg [31:0] result;
+
+    // logic
     always @(posedge(clk)) begin
         $monitor("state=%d, pc=%03d, inst=%032b", state, pc, inst);
         if (reset == 0) begin
@@ -78,12 +82,32 @@ module rv32e_cpu(
                     state <= `ST_DECODE;
                 end
                 `ST_DECODE: begin
+                    case (opcode)
+                        `OP_IMM: begin
+                            operand1 <= rs1 == 0 ? x0 : x[rs1];
+                            if (funct3 == `F3_ADDI) begin
+                                operand2 <= imm11_0;
+                            end
+                        end
+                    endcase
                     state <= `ST_EXECUTE;
                 end
                 `ST_EXECUTE: begin
+                    case (opcode)
+                        `OP_IMM: begin
+                            if (funct3 == `F3_ADDI) begin
+                                result <= operand1 + operand2;
+                            end
+                        end
+                    endcase
                     state <= `ST_WRITE_BACK;
                 end
                 `ST_WRITE_BACK: begin
+                    case (opcode)
+                        `OP_IMM: begin
+                            if (rd != 0) x[rd] <= result;
+                        end
+                    endcase
                     pc <= pc + 1;
                     state <= `ST_FETCH;
                 end

@@ -11,8 +11,8 @@ module mem_program_rom(
     assign data_bus = mem[addr_bus];
 
     initial mem[0000] = {12'b1, 5'b0, `F3_ADDI, 5'b1, `OP_IMM};     // ADDI x1, x0, 1
-    initial mem[0001] = `I_NOP;
-    initial mem[0002] = `I_NOP;
+    initial mem[0001] = {12'b1, 5'b1, `F3_ADDI, 5'b1, `OP_IMM};     // ADDI x1, x1, 1
+    initial mem[0002] = {12'b1, 5'b1, `F3_ADDI, 5'b1, `OP_IMM};     // ADDI x1, x1, 1
     initial mem[0003] = `I_NOP;
     initial mem[0004] = `I_NOP;
     initial mem[0005] = `I_NOP;
