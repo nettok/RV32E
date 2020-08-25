@@ -63,7 +63,7 @@ module rv32e_cpu(
 
     /* internal memory
      *
-     * Execution is simplified by decoding all instruction operand types
+     * Execution is simplified by decoding all instruction operand types into common 32-bits operands.
      */
     reg [31:0] operand1;
     reg [31:0] operand2;
