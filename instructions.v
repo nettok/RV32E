@@ -1,4 +1,5 @@
 `define OP_IMM  7'b0010011
+`define OP_JAL  7'b1101111
 
 `define F3_ADDI 3'b000
 

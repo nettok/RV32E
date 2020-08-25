@@ -13,7 +13,7 @@ module mem_program_rom(
     initial mem[0000] = {12'b1, 5'b0, `F3_ADDI, 5'b1, `OP_IMM};     // ADDI x1, x0, 1
     initial mem[0001] = {12'b1, 5'b1, `F3_ADDI, 5'b1, `OP_IMM};     // ADDI x1, x1, 1
     initial mem[0002] = {12'b1, 5'b1, `F3_ADDI, 5'b1, `OP_IMM};     // ADDI x1, x1, 1
-    initial mem[0003] = `I_NOP;
+    initial mem[0003] = {20'b11111111111111111110, 5'b0, `OP_JAL};  // JAL x0, -2 (1 instruction up)
     initial mem[0004] = `I_NOP;
     initial mem[0005] = `I_NOP;
     initial mem[0006] = `I_NOP;

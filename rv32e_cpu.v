@@ -53,12 +53,13 @@ module rv32e_cpu(
      *
      * Some ranges are overlapped given that different instruction types use different instruction formats.
      */
-    wire [6:0]  opcode  = inst[6:0];
-    wire [4:0]  rd      = inst[11:7];   // destination register
-    wire [2:0]  funct3  = inst[14:12];
-    wire [4:0]  rs1     = inst[19:15];  // source register 1
-    wire [4:0]  rs2     = inst[24:20];  // source register 2
-    wire [11:0] imm11_0 = inst[31:20];
+    wire [6:0]  opcode   = inst[6:0];
+    wire [4:0]  rd       = inst[11:7];      // destination register
+    wire [2:0]  funct3   = inst[14:12];
+    wire [4:0]  rs1      = inst[19:15];     // source register 1
+    wire [4:0]  rs2      = inst[24:20];     // source register 2
+    wire [11:0] imm11_0  = inst[31:20];
+    wire [19:0] j_offset = inst[31:12];     // J-type offset (JAL)
 
     /* internal memory
      *
@@ -89,6 +90,15 @@ module rv32e_cpu(
                                 operand2 <= imm11_0;
                             end
                         end
+                        `OP_JAL: begin
+                            // the J-immediate encodes a signed offset (20 bits) in multiples of 2 bytes,
+                            // so we multiply the offset by 2 by shifting it 1-bit left, and leaving
+                            // the sign bit in the MSB of the operand.
+                            //
+                            // We store the final offset in operand1 (32 bits) and fill the remaining bits in the center with
+                            // 0's or 1's depending on the sign of the offset. (2's complement encoding).
+                            operand1 <= {j_offset[19], j_offset[19] == 0 ? 11'b0 : 11'b11111111111, j_offset[18:0], 1'b0};
+                        end
                     endcase
                     state <= `ST_EXECUTE;
                 end
@@ -98,9 +108,14 @@ module rv32e_cpu(
                             if (funct3 == `F3_ADDI) begin
                                 result <= operand1 + operand2;
                             end
+                            state <= `ST_WRITE_BACK;
+                        end
+                        `OP_JAL: begin
+                            if (rd != 0) x[rd] <= pc + 4;   // return address
+                            pc <= pc + operand1;
+                            state <= `ST_FETCH;
                         end
                     endcase
-                    state <= `ST_WRITE_BACK;
                 end
                 `ST_WRITE_BACK: begin
                     case (opcode)
