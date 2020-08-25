@@ -21,7 +21,7 @@ module rv32e_cpu(
     // output [31:0] mem_addr_bus
 );
     // registers (RV32E has 16 registers (x0-x15))
-    reg  [31:0] x [15:1];   // x1-x15 are general purpose  (x0 is defined below as it is hardwired to 0)
+    reg  [31:0] x [15:1];       // x1-x15 are general purpose  (x0 is defined below as it is hardwired to 0)
     reg  [31:0] pc;
 
     // registers wiring
@@ -54,12 +54,13 @@ module rv32e_cpu(
      * Some ranges are overlapped given that different instruction types use different instruction formats.
      */
     wire [6:0]  opcode   = inst[6:0];
-    wire [4:0]  rd       = inst[11:7];      // destination register
+    wire [4:0]  rd       = inst[11:7];                  // destination register
     wire [2:0]  funct3   = inst[14:12];
-    wire [4:0]  rs1      = inst[19:15];     // source register 1
-    wire [4:0]  rs2      = inst[24:20];     // source register 2
-    wire [11:0] imm11_0  = inst[31:20];
-    wire [19:0] j_offset = inst[31:12];     // J-type offset (JAL)
+    wire [4:0]  rs1      = inst[19:15];                 // source register 1
+    wire [4:0]  rs2      = inst[24:20];                 // source register 2
+    wire [11:0] i_imm    = inst[31:20];                 // I-type immediate (IMM)
+    wire [19:0] j_imm    = inst[31:12];                 // J-type immediate offset (JAL)
+    wire [11:0] b_imm    = {inst[31:25], inst[11:7]};   // B-type immediate offset (BRANCH)
 
     /* internal memory
      *
@@ -68,6 +69,7 @@ module rv32e_cpu(
     reg [31:0] operand1;
     reg [31:0] operand2;
     reg [31:0] result;
+    reg [31:0] offset;
 
     // logic
     always @(posedge(clk)) begin
@@ -84,10 +86,10 @@ module rv32e_cpu(
                 end
                 `ST_DECODE: begin
                     case (opcode)
-                        `OP_IMM: begin
+                        `OP_OP_IMM: begin
                             operand1 <= rs1 == 0 ? x0 : x[rs1];
                             if (funct3 == `F3_ADDI) begin
-                                operand2 <= imm11_0;
+                                operand2 <= i_imm;
                             end
                         end
                         `OP_JAL: begin
@@ -95,16 +97,21 @@ module rv32e_cpu(
                             // so we multiply the offset by 2 by shifting it 1-bit left, and leaving
                             // the sign bit in the MSB of the operand.
                             //
-                            // We store the final offset in operand1 (32 bits) and fill the remaining bits in the center with
+                            // We store the final offset (32 bits) and fill the remaining bits in the center with
                             // 0's or 1's depending on the sign of the offset. (2's complement encoding).
-                            operand1 <= {j_offset[19], j_offset[19] == 0 ? 11'b0 : 11'b11111111111, j_offset[18:0], 1'b0};
+                            offset <= {j_imm[19], j_imm[19] == 0 ? 11'b0 : 11'b11111111111, j_imm[18:0], 1'b0};
+                        end
+                        `OP_BRANCH: begin
+                            operand1 <= rs1 == 0 ? x0 : x[rs1];
+                            operand2 <= rs2 == 0 ? x0 : x[rs2];
+                            offset   <= {b_imm[11], b_imm[11] == 0 ? 19'b0 : 19'b1111111111111111111, b_imm[10:0], 1'b0};
                         end
                     endcase
                     state <= `ST_EXECUTE;
                 end
                 `ST_EXECUTE: begin
                     case (opcode)
-                        `OP_IMM: begin
+                        `OP_OP_IMM: begin
                             if (funct3 == `F3_ADDI) begin
                                 result <= operand1 + operand2;
                             end
@@ -112,14 +119,55 @@ module rv32e_cpu(
                         end
                         `OP_JAL: begin
                             if (rd != 0) x[rd] <= pc + 4;   // return address
-                            pc <= pc + operand1;
+                            pc <= pc + offset;
+                            state <= `ST_FETCH;
+                        end
+                        `OP_BRANCH: begin
+                            case (funct3)
+                                `F3_BEQ: begin
+                                    if (operand1 == operand2)
+                                        pc <= pc + offset;
+                                    else
+                                        pc <= pc + 4;
+                                end
+                                `F3_BNE: begin
+                                    if (operand1 != operand2)
+                                        pc <= pc + offset;
+                                    else
+                                        pc <= pc + 4;
+                                end
+                                `F3_BLT: begin
+                                    if ($signed(operand1) < $signed(operand2))
+                                        pc <= pc + offset;
+                                    else
+                                        pc <= pc + 4;
+                                end
+                                `F3_BGE: begin
+                                    if ($signed(operand1) >= $signed(operand2))
+                                        pc <= pc + offset;
+                                    else
+                                        pc <= pc + 4;
+                                end
+                                `F3_BLTU: begin
+                                    if (operand1 < operand2)
+                                        pc <= pc + offset;
+                                    else
+                                        pc <= pc + 4;
+                                end
+                                `F3_BGEU: begin
+                                    if (operand1 >= operand2)
+                                        pc <= pc + offset;
+                                    else
+                                        pc <= pc + 4;
+                                end
+                            endcase
                             state <= `ST_FETCH;
                         end
                     endcase
                 end
                 `ST_WRITE_BACK: begin
                     case (opcode)
-                        `OP_IMM: begin
+                        `OP_OP_IMM: begin
                             if (rd != 0) x[rd] <= result;
                         end
                     endcase

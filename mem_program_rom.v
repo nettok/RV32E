@@ -10,11 +10,11 @@ module mem_program_rom(
     reg [31:0] mem [512:0];
     assign data_bus = mem[addr_bus/4];
 
-    initial mem[0000] = {12'b1, 5'b0, `F3_ADDI, 5'b1, `OP_IMM};     // ADDI x1, x0, 1
-    initial mem[0001] = {12'b1, 5'b1, `F3_ADDI, 5'b1, `OP_IMM};     // ADDI x1, x1, 1
-    initial mem[0002] = {12'b1, 5'b1, `F3_ADDI, 5'b1, `OP_IMM};     // ADDI x1, x1, 1
-    initial mem[0003] = {20'b11111111111111111110, 5'b0, `OP_JAL};  // JAL x0, -2 (1 instruction up)
-    initial mem[0004] = `I_NOP;
+    initial mem[0000] = {12'b1, 5'b0, `F3_ADDI, 5'b1, `OP_OP_IMM};                  // ADDI x1, x0, 1
+    initial mem[0001] = {12'b1, 5'b1, `F3_ADDI, 5'b1, `OP_OP_IMM};                  // ADDI x1, x1, 1
+    initial mem[0002] = {12'b1, 5'b1, `F3_ADDI, 5'b1, `OP_OP_IMM};                  // ADDI x1, x1, 1
+    initial mem[0003] = {7'b1111111, 5'b0, 5'b1, `F3_BLT, 5'b11110, `OP_BRANCH};    // BLT  x1, x0, -2 (1 instruction up)
+    initial mem[0004] = {20'b11111111111111111100, 5'b0, `OP_JAL};                  // JAL  x0, -4 (2 instructions up)
     initial mem[0005] = `I_NOP;
     initial mem[0006] = `I_NOP;
     initial mem[0007] = `I_NOP;
