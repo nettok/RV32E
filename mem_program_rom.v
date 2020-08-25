@@ -8,7 +8,7 @@ module mem_program_rom(
 );
 
     reg [31:0] mem [512:0];
-    assign data_bus = mem[addr_bus];
+    assign data_bus = mem[addr_bus/4];
 
     initial mem[0000] = {12'b1, 5'b0, `F3_ADDI, 5'b1, `OP_IMM};     // ADDI x1, x0, 1
     initial mem[0001] = {12'b1, 5'b1, `F3_ADDI, 5'b1, `OP_IMM};     // ADDI x1, x1, 1

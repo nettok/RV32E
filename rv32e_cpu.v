@@ -108,7 +108,7 @@ module rv32e_cpu(
                             if (rd != 0) x[rd] <= result;
                         end
                     endcase
-                    pc <= pc + 1;
+                    pc <= pc + 4;
                     state <= `ST_FETCH;
                 end
             endcase
