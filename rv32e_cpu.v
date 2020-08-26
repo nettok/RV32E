@@ -79,6 +79,21 @@ module rv32e_cpu(
         if (reset == 0) begin
             state <= `ST_FETCH;
             pc    <= 0;
+            x[1]  <= 0;
+            x[2]  <= 0;
+            x[3]  <= 0;
+            x[4]  <= 0;
+            x[5]  <= 0;
+            x[6]  <= 0;
+            x[7]  <= 0;
+            x[8]  <= 0;
+            x[9]  <= 0;
+            x[10] <= 0;
+            x[11] <= 0;
+            x[12] <= 0;
+            x[13] <= 0;
+            x[14] <= 0;
+            x[15] <= 0;
         end
         else begin
             case (state)
@@ -90,9 +105,7 @@ module rv32e_cpu(
                     case (opcode)
                         `OP_OP_IMM: begin
                             operand1 <= rs1 == 0 ? x0 : x[rs1];
-                            if (funct3 == `F3_ADDI) begin
-                                operand2 <= i_imm;
-                            end
+                            operand2 <= i_imm;
                         end
                         `OP_LUI:
                             result <= {u_imm, 12'b0};
@@ -115,9 +128,8 @@ module rv32e_cpu(
                 `ST_EXECUTE: begin
                     case (opcode)
                         `OP_OP_IMM: begin
-                            if (funct3 == `F3_ADDI) begin
-                                result <= operand1 + operand2;
-                            end
+                            if (funct3 == `F3_ADDI)     result <= operand1 + operand2;
+                            else if (funct3 == `F3_ORI) result <= operand1 | operand2;
                             state <= `ST_WRITE_BACK;
                         end
                         `OP_JAL: begin
@@ -154,9 +166,8 @@ module rv32e_cpu(
                 end
                 `ST_WRITE_BACK: begin
                     case (opcode)
-                        `OP_OP_IMM, `OP_LUI: begin
+                        `OP_OP_IMM, `OP_LUI:
                             if (rd != 0) x[rd] <= result;
-                        end
                     endcase
                     pc <= pc + 4;
                     state <= `ST_FETCH;
