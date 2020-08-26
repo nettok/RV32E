@@ -13,12 +13,11 @@ module rv32e_cpu(
     input reset,
 
     input  [31:0] mem_program_data_bus,
-    output [31:0] mem_program_addr_bus
+    output [31:0] mem_program_addr_bus,
 
-    // TODO
-    // input  [31:0] mem_read_data_bus,
+    input  [31:0] mem_read_data_bus,
     // output [31:0] mem_write_data_bus,
-    // output [31:0] mem_addr_bus
+    output [31:0] mem_addr_bus
 );
     // registers (RV32E has 16 registers (x0-x15))
     reg  [31:0] x [15:1];       // x1-x15 are general purpose  (x0 is defined below as it is hardwired to 0)
@@ -72,6 +71,9 @@ module rv32e_cpu(
     reg [31:0] operand2;
     reg [31:0] result;
     reg [31:0] offset;
+    reg [31:0] effective_addr;
+
+    assign mem_addr_bus = effective_addr;
 
     // logic
     always @(posedge(clk)) begin
@@ -103,6 +105,8 @@ module rv32e_cpu(
                 end
                 `ST_DECODE: begin
                     case (opcode)
+                        `OP_LOAD:
+                            effective_addr <= (rs1 == 0 ? x0 : x[rs1]) + $signed(i_imm);
                         `OP_OP_IMM: begin
                             operand1 <= rs1 == 0 ? x0 : x[rs1];
                             operand2 <= i_imm;
@@ -131,6 +135,10 @@ module rv32e_cpu(
                 end
                 `ST_EXECUTE: begin
                     case (opcode)
+                        `OP_LOAD: begin
+                            if (funct3 == `F3_LW) result <= mem_read_data_bus;
+                            state <= `ST_WRITE_BACK;
+                        end
                         `OP_OP_IMM: begin
                             if (funct3 == `F3_ADDI)     result <= operand1 + operand2;
                             else if (funct3 == `F3_ORI) result <= operand1 | operand2;
@@ -174,7 +182,7 @@ module rv32e_cpu(
                 end
                 `ST_WRITE_BACK: begin
                     case (opcode)
-                        `OP_OP_IMM, `OP_OP, `OP_LUI:
+                        `OP_LOAD, `OP_OP_IMM, `OP_OP, `OP_LUI:
                             if (rd != 0) x[rd] <= result;
                     endcase
                     pc <= pc + 4;

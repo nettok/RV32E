@@ -2,6 +2,7 @@
 
 `include "rv32e_cpu.v"
 `include "mem_program_rom.v"
+`include "mem_data_ram.v"
 
 module testbench;
     reg  clk;
@@ -10,16 +11,26 @@ module testbench;
     wire [31:0] mem_program_data_bus;
     wire [31:0] mem_program_addr_bus;
 
+    wire [31:0] mem_read_data_bus;
+    wire [31:0] mem_addr_bus;
+
     rv32e_cpu rv32e_cpu0(
         .clk(clk),
         .reset(reset),
         .mem_program_data_bus(mem_program_data_bus),
-        .mem_program_addr_bus(mem_program_addr_bus)
+        .mem_program_addr_bus(mem_program_addr_bus),
+        .mem_read_data_bus(mem_read_data_bus),
+        .mem_addr_bus(mem_addr_bus)
     );
 
     mem_program_rom mem_program_rom0(
         .addr_bus(mem_program_addr_bus),
         .data_bus(mem_program_data_bus)
+    );
+
+    mem_data_ram mem_data_ram0(
+        .addr_bus(mem_addr_bus),
+        .read_data_bus(mem_read_data_bus)
     );
 
     always #5 clk = ~clk;
