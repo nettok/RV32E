@@ -112,7 +112,7 @@ module rv32e_cpu(
                         `OP_JAL:
                             // the J-immediate encodes a signed offset (20 bits) in multiples of 2 bytes,
                             // so we multiply the offset by 2 by shifting it 1-bit left, and leaving
-                            // the sign bit in the MSB of the operand.
+                            // the sign bit in the MSB of the offset.
                             //
                             // We store the final offset (32 bits) and fill the remaining bits in the center with
                             // 0's or 1's depending on the sign of the offset. (2's complement encoding).
