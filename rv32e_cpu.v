@@ -55,10 +55,12 @@ module rv32e_cpu(
      */
     wire [6:0]  opcode   = inst[6:0];
     wire [4:0]  rd       = inst[11:7];                  // destination register
-    wire [2:0]  funct3   = inst[14:12];
+    wire [2:0]  funct3   = inst[14:12];                 // operation selector
     wire [4:0]  rs1      = inst[19:15];                 // source register 1
     wire [4:0]  rs2      = inst[24:20];                 // source register 2
-    wire [11:0] i_imm    = inst[31:20];                 // I-type immediate (IMM)
+    wire [6:0]  funct7   = inst[31:25];                 // operation selector
+    wire [11:0] i_imm    = inst[31:20];                 // I-type immediate (OP-IMM)
+    wire [19:0] u_imm    = inst[31:12];                 // U-type immediate (LUI, AUIPC)
     wire [19:0] j_imm    = inst[31:12];                 // J-type immediate offset (JAL)
     wire [11:0] b_imm    = {inst[31:25], inst[11:7]};   // B-type immediate offset (BRANCH)
 
@@ -92,7 +94,9 @@ module rv32e_cpu(
                                 operand2 <= i_imm;
                             end
                         end
-                        `OP_JAL: begin
+                        `OP_LUI:
+                            result <= {u_imm, 12'b0};
+                        `OP_JAL:
                             // the J-immediate encodes a signed offset (20 bits) in multiples of 2 bytes,
                             // so we multiply the offset by 2 by shifting it 1-bit left, and leaving
                             // the sign bit in the MSB of the operand.
@@ -100,7 +104,6 @@ module rv32e_cpu(
                             // We store the final offset (32 bits) and fill the remaining bits in the center with
                             // 0's or 1's depending on the sign of the offset. (2's complement encoding).
                             offset <= {j_imm[19], j_imm[19] == 0 ? 11'b0 : 11'b11111111111, j_imm[18:0], 1'b0};
-                        end
                         `OP_BRANCH: begin
                             operand1 <= rs1 == 0 ? x0 : x[rs1];
                             operand2 <= rs2 == 0 ? x0 : x[rs2];
@@ -124,50 +127,34 @@ module rv32e_cpu(
                         end
                         `OP_BRANCH: begin
                             case (funct3)
-                                `F3_BEQ: begin
-                                    if (operand1 == operand2)
-                                        pc <= pc + offset;
-                                    else
-                                        pc <= pc + 4;
-                                end
-                                `F3_BNE: begin
-                                    if (operand1 != operand2)
-                                        pc <= pc + offset;
-                                    else
-                                        pc <= pc + 4;
-                                end
-                                `F3_BLT: begin
-                                    if ($signed(operand1) < $signed(operand2))
-                                        pc <= pc + offset;
-                                    else
-                                        pc <= pc + 4;
-                                end
-                                `F3_BGE: begin
-                                    if ($signed(operand1) >= $signed(operand2))
-                                        pc <= pc + offset;
-                                    else
-                                        pc <= pc + 4;
-                                end
-                                `F3_BLTU: begin
-                                    if (operand1 < operand2)
-                                        pc <= pc + offset;
-                                    else
-                                        pc <= pc + 4;
-                                end
-                                `F3_BGEU: begin
-                                    if (operand1 >= operand2)
-                                        pc <= pc + offset;
-                                    else
-                                        pc <= pc + 4;
-                                end
+                                `F3_BEQ:
+                                    if (operand1 == operand2) pc <= pc + offset;
+                                    else pc <= pc + 4;
+                                `F3_BNE:
+                                    if (operand1 != operand2) pc <= pc + offset;
+                                    else pc <= pc + 4;
+                                `F3_BLT:
+                                    if ($signed(operand1) < $signed(operand2)) pc <= pc + offset;
+                                    else pc <= pc + 4;
+                                `F3_BGE:
+                                    if ($signed(operand1) >= $signed(operand2)) pc <= pc + offset;
+                                    else pc <= pc + 4;
+                                `F3_BLTU:
+                                    if (operand1 < operand2) pc <= pc + offset;
+                                    else pc <= pc + 4;
+                                `F3_BGEU:
+                                    if (operand1 >= operand2) pc <= pc + offset;
+                                    else pc <= pc + 4;
                             endcase
                             state <= `ST_FETCH;
                         end
+                        default:
+                            state <= `ST_WRITE_BACK;
                     endcase
                 end
                 `ST_WRITE_BACK: begin
                     case (opcode)
-                        `OP_OP_IMM: begin
+                        `OP_OP_IMM, `OP_LUI: begin
                             if (rd != 0) x[rd] <= result;
                         end
                     endcase
