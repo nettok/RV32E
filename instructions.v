@@ -8,6 +8,11 @@
 // U-type
 `define OP_LUI      7'b0110111
 
+// R-type
+`define OP_OP       7'b0110011
+`define F3_SUB      3'b000
+`define F7_SUB      7'b0100000
+
 // J-type
 `define OP_JAL      7'b1101111
 

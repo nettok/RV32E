@@ -109,6 +109,10 @@ module rv32e_cpu(
                         end
                         `OP_LUI:
                             result <= {u_imm, 12'b0};
+                        `OP_OP: begin
+                            operand1 <= rs1 == 0 ? x0 : x[rs1];
+                            operand2 <= rs2 == 0 ? x0 : x[rs2];
+                        end
                         `OP_JAL:
                             // the J-immediate encodes a signed offset (20 bits) in multiples of 2 bytes,
                             // so we multiply the offset by 2 by shifting it 1-bit left, and leaving
@@ -130,6 +134,10 @@ module rv32e_cpu(
                         `OP_OP_IMM: begin
                             if (funct3 == `F3_ADDI)     result <= operand1 + operand2;
                             else if (funct3 == `F3_ORI) result <= operand1 | operand2;
+                            state <= `ST_WRITE_BACK;
+                        end
+                        `OP_OP: begin
+                            if (funct7 == `F7_SUB && funct3 == `F3_SUB) result <= operand1 - operand2;
                             state <= `ST_WRITE_BACK;
                         end
                         `OP_JAL: begin
@@ -166,7 +174,7 @@ module rv32e_cpu(
                 end
                 `ST_WRITE_BACK: begin
                     case (opcode)
-                        `OP_OP_IMM, `OP_LUI:
+                        `OP_OP_IMM, `OP_OP, `OP_LUI:
                             if (rd != 0) x[rd] <= result;
                     endcase
                     pc <= pc + 4;
