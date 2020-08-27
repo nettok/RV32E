@@ -12,8 +12,8 @@ module rv32e_cpu(
     input clk,
     input reset,
 
-    input  [31:0] mem_program_data_bus,
-    output [31:0] mem_program_addr_bus,
+    input  [31:0] program_data_bus,
+    output [31:0] program_addr_bus,
 
     input  [31:0] mem_read_data_bus,
     output [31:0] mem_write_data_bus,
@@ -43,7 +43,7 @@ module rv32e_cpu(
     wire [31:0] x14 = x[14];
     wire [31:0] x15 = x[15];
 
-    assign mem_program_addr_bus = pc;
+    assign program_addr_bus = pc;
 
     // state machine
     reg [3:0]  state;
@@ -112,7 +112,7 @@ module rv32e_cpu(
         else begin
             case (state)
                 `ST_FETCH: begin
-                    inst <= mem_program_data_bus;
+                    inst <= program_data_bus;
                     state <= `ST_DECODE;
                 end
                 `ST_DECODE: begin
