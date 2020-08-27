@@ -2,6 +2,10 @@
 `define OP_LOAD     7'b0000011
 `define F3_LW       3'b010
 
+// S-type STORE
+`define OP_STORE    7'b0100011
+`define F3_SW       3'b010
+
 // I-type OP-IMM
 `define OP_OP_IMM   7'b0010011
 `define F3_ADDI     3'b000

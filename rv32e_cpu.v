@@ -16,7 +16,8 @@ module rv32e_cpu(
     output [31:0] mem_program_addr_bus,
 
     input  [31:0] mem_read_data_bus,
-    // output [31:0] mem_write_data_bus,
+    output [31:0] mem_write_data_bus,
+    output mem_write_signal,
     output [31:0] mem_addr_bus
 );
     // registers (RV32E has 16 registers (x0-x15))
@@ -62,6 +63,7 @@ module rv32e_cpu(
     wire [19:0] u_imm    = inst[31:12];                 // U-type immediate (LUI, AUIPC)
     wire [19:0] j_imm    = inst[31:12];                 // J-type immediate offset (JAL)
     wire [11:0] b_imm    = {inst[31:25], inst[11:7]};   // B-type immediate offset (BRANCH)
+    wire [11:0] s_imm    = {inst[31:25], inst[11:7]};   // S-type immediate (STORE)
 
     /* internal memory
      *
@@ -72,8 +74,11 @@ module rv32e_cpu(
     reg [31:0] result;
     reg [31:0] offset;
     reg [31:0] effective_addr;
+    reg write_signal_reg;
 
     assign mem_addr_bus = effective_addr;
+    assign mem_write_data_bus = operand2;   // operand2 will have the content of rs2
+    assign mem_write_signal = write_signal_reg;
 
     // logic
     always @(posedge(clk)) begin
@@ -96,6 +101,13 @@ module rv32e_cpu(
             x[13] <= 0;
             x[14] <= 0;
             x[15] <= 0;
+
+            operand1 <= 0;
+            operand2 <= 0;
+            result <= 0;
+            offset <= 0;
+            effective_addr <= 0;
+            write_signal_reg <= 0;
         end
         else begin
             case (state)
@@ -107,6 +119,10 @@ module rv32e_cpu(
                     case (opcode)
                         `OP_LOAD:
                             effective_addr <= (rs1 == 0 ? x0 : x[rs1]) + $signed(i_imm);
+                        `OP_STORE: begin
+                            effective_addr <= (rs1 == 0 ? x0 : x[rs1]) + $signed(s_imm);
+                            operand2 <= rs2 == 0 ? x0 : x[rs2];
+                        end
                         `OP_OP_IMM: begin
                             operand1 <= rs1 == 0 ? x0 : x[rs1];
                             operand2 <= i_imm;
@@ -137,6 +153,10 @@ module rv32e_cpu(
                     case (opcode)
                         `OP_LOAD: begin
                             if (funct3 == `F3_LW) result <= mem_read_data_bus;
+                            state <= `ST_WRITE_BACK;
+                        end
+                        `OP_STORE: begin
+                            if (funct3 == `F3_SW) write_signal_reg <= 1;
                             state <= `ST_WRITE_BACK;
                         end
                         `OP_OP_IMM: begin
@@ -184,6 +204,8 @@ module rv32e_cpu(
                     case (opcode)
                         `OP_LOAD, `OP_OP_IMM, `OP_OP, `OP_LUI:
                             if (rd != 0) x[rd] <= result;
+                        `OP_STORE:
+                            write_signal_reg <= 0;
                     endcase
                     pc <= pc + 4;
                     state <= `ST_FETCH;

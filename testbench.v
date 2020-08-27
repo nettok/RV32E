@@ -12,6 +12,8 @@ module testbench;
     wire [31:0] mem_program_addr_bus;
 
     wire [31:0] mem_read_data_bus;
+    wire [31:0] mem_write_data_bus;
+    wire mem_write_signal;
     wire [31:0] mem_addr_bus;
 
     rv32e_cpu rv32e_cpu0(
@@ -20,6 +22,8 @@ module testbench;
         .mem_program_data_bus(mem_program_data_bus),
         .mem_program_addr_bus(mem_program_addr_bus),
         .mem_read_data_bus(mem_read_data_bus),
+        .mem_write_data_bus(mem_write_data_bus),
+        .mem_write_signal(mem_write_signal),
         .mem_addr_bus(mem_addr_bus)
     );
 
@@ -30,7 +34,9 @@ module testbench;
 
     mem_data_ram mem_data_ram0(
         .addr_bus(mem_addr_bus),
-        .read_data_bus(mem_read_data_bus)
+        .read_data_bus(mem_read_data_bus),
+        .write_data_bus(mem_write_data_bus),
+        .write_signal(mem_write_signal)
     );
 
     always #5 clk = ~clk;

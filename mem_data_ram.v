@@ -2,16 +2,27 @@
 
 module mem_data_ram(
     input  [31:0] addr_bus,
+    
+    input [31:0] write_data_bus,
+    input write_signal,
+
     output [31:0] read_data_bus
 );
 
     reg [7:0] mem [511:0];
     assign read_data_bus = {mem[addr_bus], mem[addr_bus+1], mem[addr_bus+2], mem[addr_bus+3]};   // byte-addressable with 32-bit bus
 
-    initial mem[0] = 'hCA;
-    initial mem[1] = 'hC0;
-    initial mem[2] = 'hCA;
-    initial mem[3] = 'hFE;
+    always @(posedge write_signal) begin
+        mem[addr_bus]   <= write_data_bus[31:24];
+        mem[addr_bus+1] <= write_data_bus[23:16];
+        mem[addr_bus+2] <= write_data_bus[15:8];
+        mem[addr_bus+3] <= write_data_bus[7:0];
+    end
+
+    initial mem[0] = 0;
+    initial mem[1] = 0;
+    initial mem[2] = 0;
+    initial mem[3] = 0;
     initial mem[4] = 0;
     initial mem[5] = 0;
     initial mem[6] = 0;
