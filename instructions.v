@@ -22,6 +22,7 @@
 
 // U-type
 `define OP_LUI      7'b0110111
+`define OP_AUIPC    7'b0010111
 
 // R-type
 `define OP_OP       7'b0110011

@@ -127,7 +127,7 @@ module rv32e_cpu(
                             operand1 <= rs1 == 0 ? x0 : x[rs1];
                             operand2 <= $signed(i_imm);
                         end
-                        `OP_LUI:
+                        `OP_LUI, `OP_AUIPC:
                             result <= {u_imm, 12'b0};
                         `OP_OP: begin
                             operand1 <= rs1 == 0 ? x0 : x[rs1];
@@ -164,6 +164,10 @@ module rv32e_cpu(
                             else if (funct3 == `F3_SRLI_SRAI)
                                 if (operand2[10])   result <= $signed(operand1) >>> operand2[4:0];
                                 else                result <= operand1 >> operand2[4:0];
+                            state <= `ST_WRITE_BACK;
+                        end
+                        `OP_AUIPC: begin
+                            result <= result + pc;
                             state <= `ST_WRITE_BACK;
                         end
                         `OP_OP: begin
@@ -204,7 +208,7 @@ module rv32e_cpu(
                 end
                 `ST_WRITE_BACK: begin
                     case (opcode)
-                        `OP_LOAD, `OP_OP_IMM, `OP_OP, `OP_LUI:
+                        `OP_LOAD, `OP_OP_IMM, `OP_OP, `OP_LUI, `OP_AUIPC:
                             if (rd != 0) x[rd] <= result;
                         `OP_STORE:
                             write_signal_reg <= 0;
