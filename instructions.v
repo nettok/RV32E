@@ -15,6 +15,9 @@
 `define F3_ORI      3'b110
 `define F3_ANDI     3'b111
 
+`define F3_SLLI         3'b001
+`define F3_SRLI_SRAI    3'b101
+
 `define I_NOP       {12'b0, 5'b0, `F3_ADDI, 5'b0, `OP_OP_IMM}   // ADDI x0, x0, 0
 
 // U-type

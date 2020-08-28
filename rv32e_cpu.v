@@ -166,6 +166,10 @@ module rv32e_cpu(
                             else if (funct3 == `F3_XORI)  result <= operand1 ^ operand2;
                             else if (funct3 == `F3_ORI)   result <= operand1 | operand2;
                             else if (funct3 == `F3_ANDI)  result <= operand1 & operand2;
+                            else if (funct3 == `F3_SLLI)  result <= operand1 << operand2[4:0];
+                            else if (funct3 == `F3_SRLI_SRAI)
+                                if (operand2[10])   result <= $signed(operand1) >>> operand2[4:0];
+                                else                result <= operand1 >> operand2[4:0];
                             state <= `ST_WRITE_BACK;
                         end
                         `OP_OP: begin
