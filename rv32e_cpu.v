@@ -160,9 +160,10 @@ module rv32e_cpu(
                             state <= `ST_WRITE_BACK;
                         end
                         `OP_OP_IMM: begin
-                            if (funct3 == `F3_ADDI)      result <= $signed(operand1) + $signed(operand2);
-                            else if (funct3 == `F3_SLTI) result <= $signed(operand1) < $signed(operand2);
-                            else if (funct3 == `F3_ORI)  result <= operand1 | operand2;
+                            if (funct3 == `F3_ADDI)       result <= $signed(operand1) + $signed(operand2);
+                            else if (funct3 == `F3_SLTI)  result <= $signed(operand1) < $signed(operand2);
+                            else if (funct3 == `F3_SLTIU) result <= operand1 < operand2;
+                            else if (funct3 == `F3_ORI)   result <= operand1 | operand2;
                             state <= `ST_WRITE_BACK;
                         end
                         `OP_OP: begin

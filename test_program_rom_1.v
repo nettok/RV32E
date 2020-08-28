@@ -15,8 +15,8 @@ module program_rom(
     initial mem[0002] = {12'd3, 5'd1, `F3_SLTI, 5'd3, `OP_OP_IMM};                  // SLTI x3, x1, 3   (x3 = 3 < 3 = 0)
     initial mem[0003] = {12'd2, 5'd1, `F3_SLTI, 5'd4, `OP_OP_IMM};                  // SLTI x4, x1, 2   (x4 = 3 < 2 = 0)
     initial mem[0004] = {12'd5, 5'd1, `F3_SLTI, 5'd5, `OP_OP_IMM};                  // SLTI x5, x1, 5   (x5 = 3 < 5 = 1)
-    initial mem[0005] = {-12'sd1, 5'd1, `F3_SLTI, 5'd6, `OP_OP_IMM};                // SLTI x6, x1, -1  (x6 = 3 < -1 = 0)
-    initial mem[0006] = `I_NOP;
+    initial mem[0005] = {-12'sd1, 5'd1, `F3_SLTI,  5'd6, `OP_OP_IMM};               // SLTI x6, x1, -1  (x6 = 3 < -1 = 0)
+    initial mem[0006] = {-12'sd1, 5'd1, `F3_SLTIU, 5'd7, `OP_OP_IMM};               // SLTI x7, x1, -1  (x6 = 3 < unsigned(-1) = 1)
     initial mem[0007] = `I_NOP;
     initial mem[0008] = `I_NOP;
     initial mem[0009] = `I_NOP;
