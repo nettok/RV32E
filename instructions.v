@@ -9,6 +9,7 @@
 // I-type OP-IMM
 `define OP_OP_IMM   7'b0010011
 `define F3_ADDI     3'b000
+`define F3_SLTI     3'b010
 `define F3_ORI      3'b110
 
 `define I_NOP       {12'b0, 5'b0, `F3_ADDI, 5'b0, `OP_OP_IMM}   // ADDI x0, x0, 0

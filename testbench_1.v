@@ -1,7 +1,7 @@
 `timescale 1ns / 1ps
 
 `include "rv32e_soc.v"
-`include "test_program_rom_0.v"
+`include "test_program_rom_1.v"
 
 module testbench;
     reg  clk;
@@ -28,7 +28,7 @@ module testbench;
     always #5 clk = ~clk;
 
     initial begin
-        $dumpfile("rv32e_testbench_0.vcd"); 
+        $dumpfile("rv32e_testbench_1.vcd"); 
         $dumpvars(); 
         clk = 0;
         reset = 1;
