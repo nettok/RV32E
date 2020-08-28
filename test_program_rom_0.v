@@ -10,8 +10,8 @@ module program_rom(
     reg [31:0] mem [99:0];
     assign data_bus = mem[addr_bus/4];  // byte-addressable with forced 32-bit aligned access
 
-    initial mem[0000] = {20'hF0CAC, 5'b10, `OP_LUI};                                // LUI  x2, 0hFOCAC
-    initial mem[0001] = {12'hAFE, 5'b10, `F3_ORI,  5'b10, `OP_OP_IMM};              // ORI  x2, x2, 0hAFE
+    initial mem[0000] = {20'hF0CAC+1'b1, 5'b10, `OP_LUI};                           // LUI  x2, 0hFOCAC
+    initial mem[0001] = {12'hAFE, 5'b10, `F3_ADDI,  5'b10, `OP_OP_IMM};             // ADDI x2, x2, 0hAFE
     initial mem[0002] = {7'b0, 5'd2, 5'b0, `F3_SW, 5'b0, `OP_STORE};                // SW   x2, x0, 0
     initial mem[0003] = {12'b0, 5'b00, `F3_LW, 5'd5, `OP_LOAD};                     // LW   x5, x0, 0
     initial mem[0004] = {12'd3, 5'b00, `F3_ORI,  5'b11, `OP_OP_IMM};                // ORI  x3, x0, 3

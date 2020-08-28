@@ -134,17 +134,11 @@ module rv32e_cpu(
                             operand2 <= rs2 == 0 ? x0 : x[rs2];
                         end
                         `OP_JAL:
-                            // the J-immediate encodes a signed offset (20 bits) in multiples of 2 bytes,
-                            // so we multiply the offset by 2 by shifting it 1-bit left, and leaving
-                            // the sign bit in the MSB of the offset.
-                            //
-                            // We store the final offset (32 bits) and fill the remaining bits in the center with
-                            // 0's or 1's depending on the sign of the offset. (2's complement encoding).
-                            offset <= {j_imm[19], j_imm[19] == 0 ? 11'b0 : 11'b11111111111, j_imm[18:0], 1'b0};
+                            offset <= $signed({j_imm, 1'b0});
                         `OP_BRANCH: begin
                             operand1 <= rs1 == 0 ? x0 : x[rs1];
                             operand2 <= rs2 == 0 ? x0 : x[rs2];
-                            offset   <= {b_imm[11], b_imm[11] == 0 ? 19'b0 : 19'b1111111111111111111, b_imm[10:0], 1'b0};
+                            offset   <= $signed({b_imm, 1'b0});
                         end
                     endcase
                     state <= `ST_EXECUTE;
@@ -173,7 +167,7 @@ module rv32e_cpu(
                             state <= `ST_WRITE_BACK;
                         end
                         `OP_OP: begin
-                            if (funct7 == `F7_SUB && funct3 == `F3_SUB) result <= operand1 - operand2;
+                            if (funct7 == `F7_SUB && funct3 == `F3_SUB) result <= $signed(operand1) - $signed(operand2);
                             state <= `ST_WRITE_BACK;
                         end
                         `OP_JAL: begin
