@@ -33,6 +33,8 @@ module rv32e_soc(
     );
 
     mem_data_ram mem_data_ram0(
+        .clk(clk),
+        .reset(reset),
         .addr_bus(mem_addr_bus),
         .read_data_bus(mem_read_data_bus),
         .write_data_bus(mem_write_data_bus),

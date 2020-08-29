@@ -82,7 +82,7 @@ module rv32e_cpu(
 
     // logic
     always @(posedge(clk)) begin
-        $monitor("state=%d, pc=%03d, instruction=%032b", state, pc, instruction);
+        //$monitor("state=%d, pc=%03d, instruction=%032b", state, pc, instruction);
         if (reset == 0) begin
             state <= `ST_FETCH;
             pc    <= 0;
