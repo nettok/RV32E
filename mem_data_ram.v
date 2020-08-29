@@ -13,7 +13,7 @@ module mem_data_ram(
     output [7:0] o
 );
 
-    reg [7:0] mem [79:0];
+    reg [7:0] mem [99:0];
     assign read_data_bus = {mem[addr_bus], mem[addr_bus+1], mem[addr_bus+2], mem[addr_bus+3]};   // byte-addressable with 32-bit bus
 
     always @(posedge write_signal) begin
@@ -46,7 +46,7 @@ module mem_data_ram(
 
     assign o = mem[7];
     
-    // user memory (from word 2)
+    // user memory (heap) (from word 2)
     initial mem[8] = 0;
     initial mem[9] = 0;
     initial mem[10] = 0;
@@ -136,5 +136,37 @@ module mem_data_ram(
     initial mem[77] = 0;
     initial mem[78] = 0;
     initial mem[79] = 0;
+
+    initial mem[80] = 0;
+    initial mem[81] = 0;
+    initial mem[82] = 0;
+    initial mem[83] = 0;
+
+    initial mem[84] = 0;
+    initial mem[85] = 0;
+    initial mem[86] = 0;
+    initial mem[87] = 0;
+
+    initial mem[88] = 0;
+    initial mem[89] = 0;
+    initial mem[90] = 0;
+    initial mem[91] = 0;
+
+    initial mem[92] = 0;
+    initial mem[93] = 0;
+    initial mem[94] = 0;
+    initial mem[95] = 0;
+
+    initial mem[96] = 0;
+    initial mem[97] = 0;
+    initial mem[98] = 0;
+    initial mem[99] = 0;
+
+    // Stack pointer initial position (word 25) (grows to lower memory addresses ^)
+
+    always @(mem[96], mem[97], mem[98], mem[99]) begin
+        // debug, delete later
+        $display("First stack value: %d", {mem[96], mem[97], mem[98], mem[99]});
+    end
 
 endmodule
