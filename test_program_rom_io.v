@@ -20,7 +20,7 @@ module program_rom(
     initial mem[0007] = {7'b0, 5'd7, 5'd0, `F3_SW, 5'd4, `OP_STORE};    // posedge output[0]
     initial mem[0008] = {7'b0, 5'd0, 5'd0, `F3_SW, 5'd4, `OP_STORE};
     initial mem[0009] = `I_NOP;
-    initial mem[0010] = {`F7_SUB, 5'd8, 5'd9, `F3_SUB, 5'd10, `OP_OP};  // x10 = x9 - x8
+    initial mem[0010] = {`F7_30_1, 5'd8, 5'd9, `F3_SUB, 5'd10, `OP_OP}; // x10 = x9 - x8
     initial mem[0011] = {7'b0, 5'd10, 5'd0, `F3_SW, 5'd4, `OP_STORE};   // output = x10
     initial mem[0012] = `I_NOP;
     initial mem[0013] = `I_NOP;
