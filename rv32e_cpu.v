@@ -47,23 +47,23 @@ module rv32e_cpu(
 
     // state machine
     reg [3:0]  state;
-    reg [31:0] inst;
+    reg [31:0] instruction;
 
     /* instruction decoding wiring
      *
      * Some ranges are overlapped given that different instruction types use different instruction formats.
      */
-    wire [6:0]  opcode   = inst[6:0];
-    wire [4:0]  rd       = inst[11:7];                  // destination register
-    wire [2:0]  funct3   = inst[14:12];                 // operation selector
-    wire [4:0]  rs1      = inst[19:15];                 // source register 1
-    wire [4:0]  rs2      = inst[24:20];                 // source register 2
-    wire [6:0]  funct7   = inst[31:25];                 // operation selector
-    wire [11:0] i_imm    = inst[31:20];                 // I-type immediate (OP-IMM)
-    wire [19:0] u_imm    = inst[31:12];                 // U-type immediate (LUI, AUIPC)
-    wire [19:0] j_imm    = inst[31:12];                 // J-type immediate offset (JAL)
-    wire [11:0] b_imm    = {inst[31:25], inst[11:7]};   // B-type immediate offset (BRANCH)
-    wire [11:0] s_imm    = {inst[31:25], inst[11:7]};   // S-type immediate (STORE)
+    wire [6:0]  opcode   = instruction[6:0];
+    wire [4:0]  rd       = instruction[11:7];                           // destination register
+    wire [2:0]  funct3   = instruction[14:12];                          // operation selector
+    wire [4:0]  rs1      = instruction[19:15];                          // source register 1
+    wire [4:0]  rs2      = instruction[24:20];                          // source register 2
+    wire [6:0]  funct7   = instruction[31:25];                          // operation selector
+    wire [11:0] i_imm    = instruction[31:20];                          // I-type immediate (OP-IMM)
+    wire [19:0] u_imm    = instruction[31:12];                          // U-type immediate (LUI, AUIPC)
+    wire [19:0] j_imm    = instruction[31:12];                          // J-type immediate offset (JAL)
+    wire [11:0] b_imm    = {instruction[31:25], instruction[11:7]};     // B-type immediate offset (BRANCH)
+    wire [11:0] s_imm    = {instruction[31:25], instruction[11:7]};     // S-type immediate (STORE)
 
     /* internal memory
      *
@@ -82,7 +82,7 @@ module rv32e_cpu(
 
     // logic
     always @(posedge(clk)) begin
-        $monitor("state=%d, pc=%03d, inst=%032b", state, pc, inst);
+        $monitor("state=%d, pc=%03d, instruction=%032b", state, pc, instruction);
         if (reset == 0) begin
             state <= `ST_FETCH;
             pc    <= 0;
@@ -112,7 +112,7 @@ module rv32e_cpu(
         else begin
             case (state)
                 `ST_FETCH: begin
-                    inst <= program_data_bus;
+                    instruction <= program_data_bus;
                     state <= `ST_DECODE;
                 end
                 `ST_DECODE: begin
@@ -143,6 +143,13 @@ module rv32e_cpu(
                             operand1 <= rs1 == 0 ? x0 : x[rs1];
                             operand2 <= rs2 == 0 ? x0 : x[rs2];
                             offset   <= $signed({b_imm, 1'b0});
+                        end
+                        default: begin
+                            operand1 <= 0;
+                            operand2 <= 0;
+                            result <= 0;
+                            offset <= 0;
+                            effective_addr <= 0;
                         end
                     endcase
                     state <= `ST_EXECUTE;
@@ -175,8 +182,7 @@ module rv32e_cpu(
                             state <= `ST_WRITE_BACK;
                         end
                         `OP_OP: begin
-                            case (funct7)
-                                `F7_30_0:
+                            if (funct7 == `F7_30_0) begin
                                     if (funct3 == `F3_ADD)       result <= operand1 + operand2;
                                     else if (funct3 == `F3_SLT)  result <= $signed(operand1) < $signed(operand2);
                                     else if (funct3 == `F3_SLTU) result <= operand1 < operand2;
@@ -185,10 +191,11 @@ module rv32e_cpu(
                                     else if (funct3 == `F3_AND)  result <= operand1 & operand2;
                                     else if (funct3 == `F3_SLL)  result <= operand1 << operand2[4:0];
                                     else if (funct3 == `F3_SRL)  result <= operand1 >> operand2[4:0];
-                                `F7_30_1:
-                                    if (funct3 == `F3_SUB)       result <= operand1 - operand2;
+                            end
+                            else if (funct7 == `F7_30_1) begin
+                                    if (funct3 == `F3_SUB)       result <= $signed(operand1) - $signed(operand2);
                                     else if (funct3 == `F3_SRA)  result <= $signed(operand1) >>> operand2[4:0];
-                            endcase
+                            end
                             state <= `ST_WRITE_BACK;
                         end
                         `OP_JAL: begin
@@ -221,6 +228,8 @@ module rv32e_cpu(
                                 `F3_BGEU:
                                     if (operand1 >= operand2) pc <= pc + offset;
                                     else pc <= pc + 4;
+                                default:
+                                    pc <= pc + 4;
                             endcase
                             state <= `ST_FETCH;
                         end
@@ -232,11 +241,38 @@ module rv32e_cpu(
                     case (opcode)
                         `OP_LOAD, `OP_OP_IMM, `OP_OP, `OP_LUI, `OP_AUIPC:
                             if (rd != 0) x[rd] <= result;
-                        `OP_STORE:
+                        default:    // `OP_STORE
                             write_signal_reg <= 0;
                     endcase
                     pc <= pc + 4;
                     state <= `ST_FETCH;
+                end
+                default: begin
+                    // reset
+                    state <= `ST_FETCH;
+                    pc    <= 0;
+                    x[1]  <= 0;
+                    x[2]  <= 0;
+                    x[3]  <= 0;
+                    x[4]  <= 0;
+                    x[5]  <= 0;
+                    x[6]  <= 0;
+                    x[7]  <= 0;
+                    x[8]  <= 0;
+                    x[9]  <= 0;
+                    x[10] <= 0;
+                    x[11] <= 0;
+                    x[12] <= 0;
+                    x[13] <= 0;
+                    x[14] <= 0;
+                    x[15] <= 0;
+
+                    operand1 <= 0;
+                    operand2 <= 0;
+                    result <= 0;
+                    offset <= 0;
+                    effective_addr <= 0;
+                    write_signal_reg <= 0;
                 end
             endcase
         end
