@@ -154,7 +154,7 @@ module rv32e_cpu(
                             state <= `ST_WRITE_BACK;
                         end
                         `OP_OP_IMM: begin
-                            if (funct3 == `F3_ADDI)       result <= $signed(operand1) + $signed(operand2);
+                            if (funct3 == `F3_ADDI)       result <= operand1 + operand2;
                             else if (funct3 == `F3_SLTI)  result <= $signed(operand1) < $signed(operand2);
                             else if (funct3 == `F3_SLTIU) result <= operand1 < operand2;
                             else if (funct3 == `F3_XORI)  result <= operand1 ^ operand2;
@@ -171,7 +171,20 @@ module rv32e_cpu(
                             state <= `ST_WRITE_BACK;
                         end
                         `OP_OP: begin
-                            if (funct7 == `F7_SUB && funct3 == `F3_SUB) result <= $signed(operand1) - $signed(operand2);
+                            case (funct7)
+                                `F7_30_0:
+                                    if (funct3 == `F3_ADD)       result <= operand1 + operand2;
+                                    else if (funct3 == `F3_SLT)  result <= $signed(operand1) < $signed(operand2);
+                                    else if (funct3 == `F3_SLTU) result <= operand1 < operand2;
+                                    else if (funct3 == `F3_XOR)  result <= operand1 ^ operand2;
+                                    else if (funct3 == `F3_OR)   result <= operand1 | operand2;
+                                    else if (funct3 == `F3_AND)  result <= operand1 & operand2;
+                                    else if (funct3 == `F3_SLL)  result <= operand1 << operand2[4:0];
+                                    else if (funct3 == `F3_SRL)  result <= operand1 >> operand2[4:0];
+                                `F7_30_1:
+                                    if (funct3 == `F3_SUB)       result <= operand1 - operand2;
+                                    else if (funct3 == `F3_SRA)  result <= $signed(operand1) >>> operand2[4:0];
+                            endcase
                             state <= `ST_WRITE_BACK;
                         end
                         `OP_JAL: begin

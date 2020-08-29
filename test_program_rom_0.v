@@ -16,7 +16,7 @@ module program_rom(
     initial mem[0003] = {12'b0, 5'b00, `F3_LW, 5'd5, `OP_LOAD};                     // LW   x5, x0, 0
     initial mem[0004] = {12'd3, 5'b00, `F3_ORI,  5'b11, `OP_OP_IMM};                // ORI  x3, x0, 3
     initial mem[0005] = {12'd1, 5'b00, `F3_ORI,  5'd4, `OP_OP_IMM};                 // ORI  x4, x0, 1
-    initial mem[0006] = {`F7_SUB, 5'd4, 5'd3, `F3_SUB, 5'd3, `OP_OP};               // SUB  x3, x3, x4
+    initial mem[0006] = {`F7_30_1, 5'd4, 5'd3, `F3_SUB, 5'd3, `OP_OP};              // SUB  x3, x3, x4
     initial mem[0007] = {7'b1111111, 5'd4, 5'b11, `F3_BGE, 5'b11110, `OP_BRANCH};   // BGE  x3, x0, -2 (1 instruction up)
     initial mem[0008] = {12'b1, 5'b00, `F3_ADDI, 5'b01, `OP_OP_IMM};                // ADDI x1, x0, 1
     initial mem[0009] = {12'b1, 5'b01, `F3_ADDI, 5'b01, `OP_OP_IMM};                // ADDI x1, x1, 1
