@@ -43,6 +43,9 @@
 // J-type
 `define OP_JAL      7'b1101111
 
+// I-type JALR
+`define OP_JALR     7'b1100111
+
 // B-type
 `define OP_BRANCH   7'b1100011
 `define F3_BEQ      3'b000

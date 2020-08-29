@@ -135,6 +135,10 @@ module rv32e_cpu(
                         end
                         `OP_JAL:
                             offset <= $signed({j_imm, 1'b0});
+                        `OP_JALR: begin
+                            operand1 <= rs1 == 0 ? x0 : x[rs1];
+                            offset   <= $signed(i_imm);
+                        end
                         `OP_BRANCH: begin
                             operand1 <= rs1 == 0 ? x0 : x[rs1];
                             operand2 <= rs2 == 0 ? x0 : x[rs2];
@@ -188,8 +192,13 @@ module rv32e_cpu(
                             state <= `ST_WRITE_BACK;
                         end
                         `OP_JAL: begin
-                            if (rd != 0) x[rd] <= pc + 4;   // return address
+                            if (rd != 0) x[rd] <= pc + 4;
                             pc <= pc + offset;
+                            state <= `ST_FETCH;
+                        end
+                        `OP_JALR: begin
+                            if (rd != 0) x[rd] <= pc + 4;
+                            pc <= (operand1 + offset) & 32'b11111111111111111111111111111110;
                             state <= `ST_FETCH;
                         end
                         `OP_BRANCH: begin
